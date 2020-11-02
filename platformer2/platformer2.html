@@ -1,10 +1,12 @@
 <html>
 
 <head>
+    <title>Platforming Fun</title>
 </head>
-
+<!-- Jason Pruim: jrp27, September 15, 2020 -->
 
 <body>
+    <h2>Platforming Fun<sup>TM</sup></h2>
     <p>based on: <a href=https://www.educative.io/edpresso/how-to-make-a-simple-platformer-using-javascript>This</a></p>
     <canvas id="canvas"></canvas>
     <script>
@@ -39,6 +41,10 @@
             left: false,
             up: false,
         };
+        platformTemplate = [[{ x: 140, width: 150 }], [{ x: 300, width: 75 }, { x: 120, width: 75 }], [{ x: 100, width: 75 }, { x: 260, width: 75 }],
+        [{ x: 0, width: 40 }, { x: 125, width: 40 }, { x: 250, width: 40 }, { x: 375, width: 40 }],
+        [{ x: 75, width: 40 }, { x: 200, width: 40 }, { x: 325, width: 40 }, { x: 450, width: 40 }]];
+
         platformHeight = 15;
         // The friction and gravity to show realistic movements
         var gravity = 0.6;
@@ -58,24 +64,30 @@
             ctx.fillRect((player.x), (player.y), player.width, player.height);
         }
         // Function to create platforms
+        function addplat() {
+            let hei = platforms[platforms.length - 1].y - 60;
+            platformTemplate[Math.floor(Math.random() * platformTemplate.length)].forEach((el) => {
+                platforms.push({ x: el.x, y: hei, width: el.width - game.fps + 50, height: platformHeight, color: "#45597E" });
+            })
+        }
+
         function createplat() {
             //push ground
             platforms.push({ x: 0, y: canvas.height - 15, width: canvas.width, height: 15, color: "brown" })
-            platforms.push({ x: 50, y: canvas.height - 75, width: 110, height: platformHeight, color: "#45597E" })
-            platforms.push({ x: canvas.width - 160, y: canvas.height - 75, width: 110, height: platformHeight, color: "#45597E" })
-            platforms.push({ x: 200, y: canvas.height - 120, width: 100, height: platformHeight, color: "#45597E" })
-            platforms.push({ x: canvas.width - 160, y: canvas.height - 180, width: 110, height: platformHeight, color: "#45597E" })
-            platforms.push({ x: 50, y: canvas.height - 180, width: 110, height: platformHeight, color: "#45597E" })
-
-            platforms.push({ x: 150, y: canvas.height - 240, width: 200, height: platformHeight, color: "#45597E" })
-
+            for (let i = 0; i < 10; i++) { addplat() }
         }
+
         // Function to render platforms
         function renderplat() {
             for (var j = 0; j < platforms.length; j++) {
                 ctx.fillStyle = platforms[j].color;
                 ctx.fillRect(platforms[j].x, platforms[j].y, platforms[j].width, platforms[j].height);
+                if (j != 0) {
+                    platforms[j].y += 1;
+                }
             }
+            platforms.filter((el) => el.y < canvas.height)
+
         }
         // This function will be called when a key on the keyboard is pressed
         function keydown(e) {
@@ -187,6 +199,11 @@
                 player.x = canvas.width - player.width
             }
 
+            //add Platforms as needed
+            if (game.frame % 60 == 0) {
+                addplat();
+            }
+
             // Rendering the canvas, the player and the platforms
             rendercanvas();
             renderplayer();
@@ -213,9 +230,19 @@
         // setInterval(loop, fps);
         loop()
     </script>
-    <p>Use arrow keys or WASD to move</p>
-    <p>Score is on left. FPS is on right</p>
+    <h3>Instructions</h3>
+    <p>Movement Options</p>
+    <ul>
+        <li>Use arrow keys</li>
+        <li><strong>WASD</strong> to move</li>
+    </ul>
+    <p>Score is on left.<br> FPS is on right</p>
     <p>Don't touch the groud. Stay on the platforms</p>
+
+    <p>Made by jPruim <img
+            src="https://avatars2.githubusercontent.com/u/44886135?s=400&u=fbc5d2bd95b7009b87c5738c9a7f35f296e8a3e8&v=4"
+            style="width:100px;">
+    </p>
 </body>
 
 </html>
