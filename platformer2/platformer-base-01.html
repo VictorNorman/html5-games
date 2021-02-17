@@ -1,0 +1,86 @@
+<html>
+
+<head>
+    <title>Platforming Fun</title>
+</head>
+<!-- Jason Pruim: jrp27, September 15, 2020 -->
+
+<body>
+    <h2>Game Base 1<sup>TM</sup></h2>
+    <p>based on: <a href=https://www.educative.io/edpresso/how-to-make-a-simple-platformer-using-javascript>This</a></p>
+    <canvas id="canvas"></canvas>
+    <script>
+        // The attributes of the player.
+        var game = {
+            stop: false,
+            fps: 40,
+            frame: 0
+        };
+        // Function to render the canvas
+        function rendercanvas() {
+            ctx.fillStyle = "#F0F8FF";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        //render ingame score and fps
+        function renderscore() {
+            //displays score on left and game.fps on right
+            ctx.font = "30px Arial";
+            ctx.fillStyle = "black";
+
+            // Example scoring method and display
+            ctx.fillText(game.frame / 10, 10, 50);
+            //Optional integer only score
+            // ctx.fillText(Math.floor(game.frame / 10), 10, 50);
+
+            ctx.fillText("Base Game", canvas.width / 2 - 50, canvas.height / 2);
+            //increase game speed as game goes on (optional)
+            if (game.frame > 0 && (game.frame % 100 == 0)) {
+                game.fps++
+            }
+            ctx.fillText(game.fps, canvas.width - 60, 50);
+        }
+        //reset the game
+        function restart() {
+            game.frame = 0;
+            game.fps = 40;
+            game.stop = false;
+            loop();
+        }
+
+        //game loop
+        function loop() {
+            // If the player is not jumping apply the effect of frictiom
+
+            // Rendering the canvas, and some text
+            rendercanvas();
+            renderscore();
+            //Keep track of the current frame
+            game.frame++;
+
+            //setTimeout is weird
+            //First parameter is a function (this one), second is a time delay in milliseconds
+            //causes the loop function to loop at varying rates
+            setTimeout(loop, 1000 / game.fps);
+
+        }
+
+        //The code that actually is run.
+        //get the canvas from the html See
+        canvas = document.getElementById("canvas");
+        //canvas properties  for the html tag above ( looks like this <canvas id="canvas"></canvas> )
+        ctx = canvas.getContext("2d");
+        ctx.canvas.height = 500;
+        ctx.canvas.width = 500;
+        //function call to game loop
+        loop()
+    </script>
+
+    <!-- Simple tag....replace with your own when you edit -->
+    <p>Made by jPruim <img
+            src="https://avatars2.githubusercontent.com/u/44886135?s=400&u=fbc5d2bd95b7009b87c5738c9a7f35f296e8a3e8&v=4"
+            style="width:100px;">
+    </p>
+</body>
+
+</html>

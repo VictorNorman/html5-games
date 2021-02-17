@@ -1,0 +1,316 @@
+<html>
+
+<head>
+    <title>Platforming Fun</title>
+</head>
+<!-- Jason Pruim: jrp27, September 15, 2020 -->
+
+<body>
+    <h2>Platforming Fun<sup>TM</sup></h2>
+    <p>based on: <a href=https://www.educative.io/edpresso/how-to-make-a-simple-platformer-using-javascript>This</a></p>
+    <canvas id="canvas"></canvas>
+    <script>
+
+
+        // The status of the arrow keys/wasd
+        // Stores which "keys" are being pressed
+        var keys = {
+            right: false, //right or d
+            left: false, //left or a
+            up: false, //up or w
+        };
+
+        //reset the game
+        function restart() {
+            player = { //location defined based on upper left corner
+                x: 250, y: 30, x_v: 0, y_v: 0, inAir: true, height: 20, width: 10, score: 0
+            };
+
+            game = {
+                stop: false,
+                fps: 40,
+                frame: 0
+            }
+            platforms = [];
+            createplat();
+            loop();
+        }
+
+
+        //Prework to build the objects to display
+        //used to create platforms
+        platformTemplate = [[{ x: 140, width: 150 }], [{ x: 300, width: 75 }, { x: 120, width: 75 }], [{ x: 100, width: 75 }, { x: 260, width: 75 }],
+        [{ x: 0, width: 40 }, { x: 125, width: 40 }, { x: 250, width: 40 }, { x: 375, width: 40 }],
+        [{ x: 75, width: 40 }, { x: 200, width: 40 }, { x: 325, width: 40 }, { x: 450, width: 40 }]];
+
+        platformHeight = 15;
+
+        // The friction and gravity to show realistic movements
+        var gravity = 0.6;
+        var friction = 0.7;
+        // The number of platforms
+        var num = 5;
+        // The platforms
+        var platforms = [];
+
+
+        // Functions to create platforms as the game progresses
+        // Generates the coordinates of the platform
+        function addplat() {
+            let hei = platforms[platforms.length - 1].y - 60;
+            platformTemplate[Math.floor(Math.random() * platformTemplate.length)].forEach((el) => {
+                platforms.push({ x: el.x, y: hei, width: el.width - game.fps + 50, height: platformHeight, color: "#45597E" });
+            })
+        }
+        //adds a new platform to the platforms array
+        function createplat() {
+            //push ground
+            platforms.push({ x: 0, y: canvas.height - 15, width: canvas.width, height: 15, color: "brown" })
+            for (let i = 0; i < 10; i++) { addplat() }
+        }
+
+
+
+        //Keyboard input functions
+        // This function will be called when a key on the keyboard is pressed
+        function keydown(e) {
+            // 37 is the code for the left arrow key
+            if (e.keyCode == 37 || e.keyCode == 65) {
+                keys.left = true;
+            }
+            // 37 is the code for the up arrow key
+            if (e.keyCode == 38 || e.keyCode == 87) {
+                if (player.inAir == false) {
+                    player.y_v = -8;
+                }
+            }
+            if (e.keyCode == 76) {
+                if (game.stop == true) {
+                    restart()
+                }
+            }
+            // 39 is the code for the right arrow key
+            if (e.keyCode == 39 || e.keyCode == 68) {
+                keys.right = true;
+            }
+        }
+        // This function is called when the pressed key is released
+        function keyup(e) {
+            if (e.keyCode == 37 || e.keyCode == 65) {
+                keys.left = false;
+            }
+            if (e.keyCode == 38 || e.keyCode == 87) {
+                if (player.y_v < -2) {
+                    player.y_v = -3;
+                }
+            }
+            if (e.keyCode == 39 || e.keyCode == 68) {
+                keys.right = false;
+            }
+        }
+
+
+
+        //Rendering functions
+        function render() {
+            rendercanvas();
+            renderplayer();
+            renderplat();
+            renderscore();
+        }
+        //render ingame score and fps
+        function renderscore() {
+            //displays score on left and game.fps on right
+            ctx.font = "30px Arial";
+            player.score = Math.floor(game.frame / 5);
+            ctx.fillText(player.score, 10, 50);
+            //increase game speed as game goes on
+            if (game.frame > 0 && (game.frame % 100 == 0)) {
+                game.fps++
+            }
+            ctx.fillText(game.fps, canvas.width - 60, 50);
+        }
+
+        //display final score
+        function renderGameOver() {
+            ctx.fillStyle = "#000000"
+            ctx.font = "30px Arial";
+            player.score = Math.floor(game.frame / 5);
+            ctx.fillText("Final Score: " + String(player.score), 150, 200);
+            ctx.fillText("Press L to restart", 135, 300)
+        }
+
+        // Function to render platforms
+        function renderplat() {
+            for (var j = 1; j < platforms.length; j++) {
+                ctx.fillStyle = platforms[j].color;
+                ctx.fillRect(platforms[j].x, platforms[j].y, platforms[j].width, platforms[j].height);
+                if (j != 0) {
+                    platforms[j].y += 1;
+                }
+            }
+            //print ground on last (on top)
+            ctx.fillStyle = platforms[0].color;
+            ctx.fillRect(platforms[0].x, platforms[0].y, platforms[0].width, platforms[0].height);
+
+            //remove platforms that have fallen off screen.
+            platforms.filter((el) => el.y < canvas.height)
+
+        }
+
+        // Function to render the canvas
+        function rendercanvas() {
+            ctx.fillStyle = "#F0F8FF";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        // Function to render the player
+        function renderplayer() {
+            ctx.fillStyle = "#F08080";
+            ctx.fillRect((player.x), (player.y), player.width, player.height);
+        }
+
+
+
+
+
+        //Player Movement
+        function movePlayer() {
+            // If the player is in the air apply the effect of frictiom
+            if (player.inAir == false) {
+                playerFriction()
+            } else {
+                // If the player is in the air then apply the effect of gravity
+                playerGravity()
+            }
+
+            // If the left key is pressed increase the relevant horizontal velocity
+            if (keys.left && !keys.right) {
+                playerMoveLeft();
+            }
+            if (keys.right && !keys.left) {
+                playerMoveRight();
+            }
+
+            // Updating the y and x coordinates of the player
+            player.y += player.y_v;
+            player.x += player.x_v;
+
+            // Check Platform Collision
+            playerPlatformCheck();
+
+            //Check border Collision
+            playerCheckBorder();
+        }
+
+        //Add horizontal friction
+        function playerFriction() {
+            player.x_v *= friction;
+        }
+        //Add gravity
+        function playerGravity() {
+            player.y_v += gravity;
+            //stop falling through platforms by setting terminal velocity
+            if (player.y_v > platformHeight * 0.9) {
+                player.y_v = platformHeight * 0.9;
+            }
+        }
+        function playerMoveLeft() {
+            player.x_v = -2.5;
+        }
+        function playerMoveRight() {
+            player.x_v = 2.5;
+        }
+
+        function playerPlatformCheck() {
+            // A simple code that checks for collions with the platform
+            var i = -1;
+            var plat = -1;
+            //if motion is bound from below by a platform, set plat to that platform id
+            for (i = 0; i < platforms.length; i++) { //check platform contact
+                if (platforms[i].x - player.width < player.x && player.x < platforms[i].x + platforms[i].width &&
+                    platforms[i].y <= player.y + player.height && player.y + player.height < platforms[i].y + platforms[i].height) {
+                    plat = i;
+                }
+            }
+            //Allow a jump if on the platform (no double jumps etc.)
+            if (plat > -1) { // plat> -1 if the player is  bound by a platform
+                player.inAir = false; //thus the Player could jump
+                player.y = platforms[plat].y - player.height; //Don't let the player fall "throguh" the platform
+            } else {
+                player.inAir = true;
+            }
+        }
+
+        function playerCheckBorder() {
+            //Fix box to left or right of screen
+            if (player.x < 0) {
+                player.x = 0;
+            } else if (player.x + player.width > canvas.width) {
+                player.x = canvas.width - player.width
+            }
+        }
+
+
+        //Game loop
+        function loop() {
+            //Complications of player movement
+            movePlayer();
+
+            //add Platforms as needed
+            if (game.frame % 60 == 0) {
+                addplat();
+            }
+
+            // Rendering the canvas, the player and the platforms
+            render();
+
+            //update game state (calls the loop)
+            game.frame++;
+            if ((canvas.height - player.y) < player.height + platforms[0].height + 1) {
+                game.stop = true;
+            }
+            if (game.stop == false) {
+                setTimeout(loop, 1000 / game.fps);
+            } else {
+                renderGameOver();
+            }
+        }
+
+
+
+
+
+        //This is code that initializes the document
+
+        //Interact with the html5
+        canvas = document.getElementById("canvas");
+        ctx = canvas.getContext("2d");
+        ctx.canvas.height = 500;
+        ctx.canvas.width = 500;
+
+        // Adding the event listeners
+        // This is how key pressing is accessed in the code
+        document.addEventListener("keydown", keydown);
+        document.addEventListener("keyup", keyup);
+        //initialize player, game, platforms and start game
+        restart()
+
+
+
+    </script>
+    <h3>Instructions</h3>
+    <p>Movement Options</p>
+    <ul>
+        <li>Use arrow keys</li>
+        <li><strong>WASD</strong> to move</li>
+    </ul>
+    <p>Score is on left.<br> FPS is on right</p>
+    <p>Don't touch the groud. Stay on the platforms</p>
+
+    <p>Made by jPruim <img
+            src="https://avatars2.githubusercontent.com/u/44886135?s=400&u=fbc5d2bd95b7009b87c5738c9a7f35f296e8a3e8&v=4"
+            style="width:100px;">
+    </p>
+</body>
+
+</html>
