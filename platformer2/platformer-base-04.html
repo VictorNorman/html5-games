@@ -14,16 +14,47 @@
 
         // The status of the arrow keys/wasd
         // Stores which "keys" are being pressed
-        var keys = {
-            right: false, //right or d
-            left: false, //left or a
-            up: false, //up or w
+        const keys = {
+            right: false, // right or d
+            left: false,  // left or a
+            up: false,    // up or w
         };
+
+        const playerJumpImgs = [];
+        const NUM_IMGS = 15;
+        for (let i = 0; i < NUM_IMGS; i++) {
+            const img = new Image();
+            // images are numbers 1 - 15, but indices are 0 - 14
+            img.src = `png/Jump (${i + 1}).png`;
+            playerJumpImgs.push(img);
+        }
+        let currJumpIdx = 0;
+
+        const playerWalkImgs = [];
+        for (let i = 0; i < NUM_IMGS; i++) {
+            const img = new Image();
+            // images are numbers 1 - 15, but indices are 0 - 14
+            img.src = `png/Walk (${i + 1}).png`;
+            playerWalkImgs.push(img);
+        }
+        let currWalkIdx = 0;
+
+        let idlePlayerImg = new Image();
+        idlePlayerImg.src = "png/Idle (1).png"
+        let playerImg = idlePlayerImg;
 
         //reset the game
         function restart() {
             player = { //location defined based on upper left corner
-                x: 250, y: 30, x_v: 0, y_v: 0, inAir: true, height: 30, width: 30 * 3 / 5, score: 0, lastMove: "right",
+                x: 250,
+                y: 30,
+                x_v: 0,
+                y_v: 0,
+                inAir: true,
+                height: 30,
+                width: 30 * 3 / 5,
+                score: 0,
+                lastMove: "right",
             };
 
             game = {
@@ -62,11 +93,14 @@
                 platforms.push({ x: el.x, y: hei, width: el.width - game.fps + 50, height: platformHeight, color: "#45597E" });
             })
         }
+
         //adds a new platform to the platforms array
         function createplat() {
             //push ground
             platforms.push({ x: 0, y: canvas.height - 15, width: canvas.width, height: 15, color: "brown" })
-            for (let i = 0; i < 10; i++) { addplat() }
+            for (let i = 0; i < 10; i++) {
+                addplat()
+            }
         }
 
 
@@ -109,8 +143,6 @@
             }
         }
 
-
-
         //Rendering functions
         function render() {
             rendercanvas();
@@ -118,6 +150,7 @@
             renderplat();
             renderscore();
         }
+
         //render ingame score and fps
         function renderscore() {
             //displays score on left and game.fps on right
@@ -164,15 +197,22 @@
             background.src = "png/background.png";
             ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
         }
+
         // Function to render the player
         function renderplayer() {
             ctx.fillStyle = "#F08080";
 
-            //No more Rectangle Player!!!!!!
-            // ctx.fillRect((player.x), (player.y), player.width, player.height);
-            // Generate Image
-            var playerImg = new Image()
-            playerImg.src = "png/Idle (1).png"
+            if (player.inAir) {
+                playerImg = playerJumpImgs[currJumpIdx];
+                currJumpIdx = (currJumpIdx + 1) % NUM_IMGS;
+            } else {
+                if (player.x_v === 0) {
+                    playerImg = idlePlayerImg;
+                } else {
+                    playerImg = playerWalkImgs[currWalkIdx];
+                    currWalkIdx = (currWalkIdx + 1) % NUM_IMGS;
+                }
+            }
 
             //cause the sprite to change direction
             if (player.lastMove === "right") {
@@ -182,6 +222,7 @@
             }
 
         }
+
 
         //rip this is weird
         //This function prints the image flipped horizontally
@@ -195,12 +236,10 @@
         }
 
 
-
-
         //Player Movement
         function movePlayer() {
             // If the player is in the air apply the effect of frictiom
-            if (player.inAir == false) {
+            if (!player.inAir) {
                 playerFriction()
             } else {
                 // If the player is in the air then apply the effect of gravity
@@ -212,9 +251,12 @@
                 playerMoveLeft();
                 player.lastMove = "left";
             }
-            if (keys.right && !keys.left) {
+            else if (keys.right && !keys.left) {
                 playerMoveRight();
                 player.lastMove = "right";
+            }
+            else if (!keys.right && !keys.left) {
+                player.x_v = 0;
             }
 
             // Updating the y and x coordinates of the player
@@ -240,19 +282,20 @@
                 player.y_v = platformHeight * 0.9;
             }
         }
+
         function playerMoveLeft() {
             player.x_v = -2.5;
         }
+
         function playerMoveRight() {
             player.x_v = 2.5;
         }
 
         function playerPlatformCheck() {
             // A simple code that checks for collions with the platform
-            var i = -1;
-            var plat = -1;
+            let plat = -1;
             //if motion is bound from below by a platform, set plat to that platform id
-            for (i = 0; i < platforms.length; i++) { //check platform contact
+            for (let i = 0; i < platforms.length; i++) { //check platform contact
                 if (platforms[i].x - player.width < player.x && player.x < platforms[i].x + platforms[i].width &&
                     platforms[i].y <= player.y + player.height && player.y + player.height < platforms[i].y + platforms[i].height) {
                     plat = i;
